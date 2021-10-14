@@ -7,9 +7,26 @@ import { GlobalStoreContext } from '../store'
     @author McKilla Gorilla
 */
 function Top5Item(props) {
+
     const { store } = useContext(GlobalStoreContext);
+    const [ editActive, setEditActive ] = useState(false);
+    const [ text, setText ] = useState(props.text);
     const [draggedTo, setDraggedTo] = useState(0);
 
+
+    function handleToggleEdit(event) {
+        event.stopPropagation();
+        toggleEdit();
+    }
+
+    function toggleEdit() {
+        let newActive = !editActive;
+        if (newActive) {
+            store.setIsItemEditActive();
+        }
+        setEditActive(newActive);
+    }
+    
     function handleDragStart(event) {
         event.dataTransfer.setData("item", event.target.id);
     }
@@ -41,30 +58,57 @@ function Top5Item(props) {
         store.addMoveItemTransaction(sourceId, targetId);
     }
 
+    function handleKeyPress(event) {
+        if (event.code === "Enter") {
+            // let id = event.target.id.substring("list-".length);
+            // // store.changeListName(id, text);
+            toggleEdit();
+            store.addRenameItemTransaction(index, props.text, text);
+        }
+    }
+
+    function handleUpdateText(event) {
+        setText(event.target.value);
+    }
+
     let { index } = props;
     let itemClass = "top5-item";
     if (draggedTo) {
         itemClass = "top5-item-dragged-to";
     }
-    return (
-        <div
-            id={'item-' + (index + 1)}
-            className={itemClass}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            draggable="true"
-        >
-            <input
-                type="button"
-                id={"edit-item-" + index + 1}
-                className="list-card-button"
-                value={"\u270E"}
-            />
-            {props.text}
-        </div>)
+    if(editActive) {
+        return (<input
+            // id={"list-" + idNamePair._id}
+            className='list-card'
+            type='text'
+            onKeyPress={handleKeyPress}
+            onChange={handleUpdateText}
+            defaultValue={text}
+        />
+        )
+    }
+    else {
+        return (
+            <div
+                id={'item-' + (index + 1)}
+                className={itemClass}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                draggable="true"
+            >
+                <input
+                    type="button"
+                    id={"edit-item-" + index + 1}
+                    className="list-card-button"
+                    value={"\u270E"}
+                    onClick={handleToggleEdit}
+                />
+                {props.text}
+            </div>)
+    }
 }
 
 export default Top5Item;
