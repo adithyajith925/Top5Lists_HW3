@@ -11,9 +11,9 @@ import { GlobalStoreContext } from '../store'
 function ListCard(props) {
     const { store } = useContext(GlobalStoreContext);
     const [ editActive, setEditActive ] = useState(false);
-    const [ text, setText ] = useState("");
     store.history = useHistory();
     const { idNamePair, selected } = props;
+    const [ text, setText ] = useState(idNamePair.name);
 
     function handleLoadList(event) {
         if (!event.target.disabled) {
@@ -40,6 +40,7 @@ function ListCard(props) {
     }
 
     function handleKeyPress(event) {
+        event.stopPropagation();
         if (event.code === "Enter") {
             let id = event.target.id.substring("list-".length);
             store.changeListName(id, text);
@@ -49,6 +50,12 @@ function ListCard(props) {
 
     function handleUpdateText(event) {
         setText(event.target.value );
+    }
+
+    function handleModal(event) {
+        event.stopPropagation();
+        // store.setCurrentList(idNamePair._id);
+        store.showDeleteListModal(idNamePair._id);
     }
 
     let selectClass = "unselected-list-card";
@@ -77,6 +84,7 @@ function ListCard(props) {
                 id={"delete-list-" + idNamePair._id}
                 className="list-card-button"
                 value={"\u2715"}
+                onClick={handleModal}
             />
             <input
                 disabled={cardStatus}

@@ -20,7 +20,8 @@ export const GlobalStoreActionType = {
     SET_CURRENT_LIST: "SET_CURRENT_LIST",
     SET_LIST_NAME_EDIT_ACTIVE: "SET_LIST_NAME_EDIT_ACTIVE",
     SET_ITEM_EDIT_ACTIVE: "SET_ITEM_EDIT_ACTIVE",
-    CHANGE_ITEM_NAME: "CHANGE_ITEM_NAME"
+    CHANGE_ITEM_NAME: "CHANGE_ITEM_NAME",
+    MARK_LIST_DELETE: "MARK_LIST_DELETE"
 }
 
 // WE'LL NEED THIS TO PROCESS TRANSACTIONS
@@ -44,6 +45,16 @@ export const useGlobalStore = () => {
     const storeReducer = (action) => {
         const { type, payload } = action;
         switch (type) {
+            case GlobalStoreActionType.MARK_LIST_DELETE: {
+                return setStore({
+                    idNamePairs: store.idNamePairs,
+                    currentList: store.top5List,
+                    newListCounter: store.newListCounter,
+                    isListNameEditActive: false,
+                    isItemEditActive: false,
+                    listMarkedForDeletion: payload
+                })
+            }
             // LIST UPDATE OF ITS NAME
             case GlobalStoreActionType.CHANGE_LIST_NAME: {
                 return setStore({
@@ -160,6 +171,33 @@ export const useGlobalStore = () => {
         asyncChangeListName(id);
     }
 
+    store.hideDeleteListModal = function () {
+        document.getElementById("delete-modal").classList.remove("is-visible");
+    }
+
+    
+    store.showDeleteListModal = function (id) {
+        async function getDeleted(id) {
+            let response = await api.getTop5ListById(id);
+            if (response.data.success) {
+                let deleteList = response.data.top5List;
+                storeReducer({
+                    type: GlobalStoreActionType.MARK_LIST_DELETE,
+                    payload: deleteList
+                })
+            }
+        }
+        getDeleted(id);
+        document.getElementById("delete-modal").classList.add("is-visible");
+    }
+
+    store.deleteMarkedList = function (id) {
+        async function deleting(id) {
+            await api.deleteTop5ListById(id).then(() => null);
+        }
+        deleting(id);
+    }
+
     store.changeItemName = function (item_num, new_name) {
         let top5List = this.currentList;
         top5List.items[item_num] = new_name;
@@ -173,7 +211,7 @@ export const useGlobalStore = () => {
             }
         }
         updateList(top5List);
-        store.setCurrentList(top5List._id);
+        // store.setCurrentList(top5List._id);
     }
 
     // THIS FUNCTION PROCESSES CLOSING THE CURRENTLY LOADED LIST
